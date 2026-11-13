@@ -55,6 +55,13 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
         }
 
         updateKeyboard()
+        // Обработка настроек
+        view.findViewById<android.view.View>(R.id.btn_settings)?.setOnClickListener {
+            val intent = android.content.Intent(this, MainActivity::class.java)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        }
+
         return view
     }
 
