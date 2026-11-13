@@ -6,7 +6,9 @@ import android.inputmethodservice.KeyboardView
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.InputType
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.GridView
 
@@ -15,12 +17,16 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
     private var keyboardView: KeyboardView? = null
     private var keyboardEn: Keyboard? = null
     private var keyboardRu: Keyboard? = null
+    private var keyboardEnAction: Keyboard? = null
+    private var keyboardRuAction: Keyboard? = null
+    
     private var isRussian = false
     private var isShifted = false
     private var vibrator: Vibrator? = null
     private var lastSpaceTime: Long = 0
     private var emojiGrid: GridView? = null
     private var isEmojiMode = false
+    private var isActionKey = false // Нужно ли менять Enter на действие
 
     override fun onCreate() {
         super.onCreate()
@@ -34,8 +40,9 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
 
         keyboardEn = Keyboard(this, R.xml.qwerty)
         keyboardRu = Keyboard(this, R.xml.qwerty_ru)
+        keyboardEnAction = Keyboard(this, R.xml.qwerty_action)
+        keyboardRuAction = Keyboard(this, R.xml.qwerty_ru_action)
         
-        keyboardView?.keyboard = keyboardEn
         keyboardView?.setOnKeyboardActionListener(this)
 
         // Настраиваем панель эмодзи
@@ -47,11 +54,44 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
             currentInputConnection?.commitText(emojis[position], 1)
         }
 
+        updateKeyboard()
         return view
     }
 
+    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        // Проверяем, куда мы печатаем
+        if (info != null) {
+            val inputType = info.inputType and InputType.TYPE_MASK_CLASS
+            val imeOptions = info.imeOptions and EditorInfo.IME_MASK_ACTION
+            
+            // Если это поиск или отправка сообщения
+            isActionKey = (imeOptions == EditorInfo.IME_ACTION_SEARCH || 
+                           imeOptions == EditorInfo.IME_ACTION_SEND || 
+                           imeOptions == EditorInfo.IME_ACTION_GO)
+            
+            updateKeyboard()
+            
+            // Меняем надпись на кнопке Enter
+            val enterKey = keyboardView?.keyboard?.keys?.find { it.codes[0] == -4 }
+            if (enterKey != null) {
+                enterKey.label = when (imeOptions) {
+                    EditorInfo.IME_ACTION_SEARCH -> "🔍"
+                    EditorInfo.IME_ACTION_SEND -> "➤"
+                    EditorInfo.IME_ACTION_GO -> "➔"
+                    else -> "Enter"
+                }
+            }
+            keyboardView?.invalidateAllKeys()
+        }
+    }
+
     private fun updateKeyboard() {
-        val kb = if (isRussian) keyboardRu else keyboardEn
+        val kb = if (isRussian) {
+            if (isActionKey) keyboardRuAction else keyboardRu
+        } else {
+            if (isActionKey) keyboardEnAction else keyboardEn
+        }
         keyboardView?.keyboard = kb
         if (isShifted) {
             kb?.isShifted = true
@@ -97,10 +137,8 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
                 isRussian = !isRussian
                 updateKeyboard()
             }
-            -200 -> { // Смайлик (переключение панели)
-                toggleEmojiPanel()
-            }
-            32 -> { // Пробел
+            -200 -> toggleEmojiPanel()
+            32 -> {
                 val now = System.currentTimeMillis()
                 if (now - lastSpaceTime < 400) {
                     inputConnection.deleteSurroundingText(1, 0)
@@ -109,6 +147,15 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
                 } else {
                     inputConnection.commitText(" ", 1)
                     lastSpaceTime = now
+                }
+            }
+            -4 -> { // Умный Enter
+                if (isActionKey) {
+                    // Отправляем действие приложению (поиск / отправка)
+                    inputConnection.performEditorAction(EditorInfo.IME_ACTION_SEARCH)
+                } else {
+                    // Обычный перенос строки
+                    inputConnection.commitText("\n", 1)
                 }
             }
             else -> {
