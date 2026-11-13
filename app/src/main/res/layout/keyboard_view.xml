@@ -6,6 +6,18 @@
     android:orientation="vertical"
     android:padding="4dp">
 
+    <!-- Панель смайликов (по умолчанию скрыта) -->
+    <GridView
+        android:id="@+id/emoji_grid"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:numColumns="6"
+        android:verticalSpacing="8dp"
+        android:horizontalSpacing="8dp"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:background="#1E1E1E"/>
+
     <android.inputmethodservice.KeyboardView
         android:id="@+id/keyboard_view"
         android:layout_width="match_parent"

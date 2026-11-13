@@ -59,7 +59,8 @@
     <Row>
         <!-- Кнопка Shift имеет код -1 -->
         <Key android:codes="-1" android:keyLabel="⇧" android:keyWidth="15%p" />
-        <Key android:codes="32" android:keyLabel="Пробел" android:keyWidth="55%p" />
+        <Key android:codes="44" android:keyLabel="," android:keyWidth="10%p" />
+        <Key android:codes="32" android:keyLabel="Пробел" android:keyWidth="45%p" />
         <Key android:codes="10" android:keyLabel="Enter" android:keyWidth="15%p" />
         <Key android:codes="-200" android:keyLabel="😊" android:keyWidth="10%p" />
     </Row>
