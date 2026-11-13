@@ -6,9 +6,9 @@ import android.inputmethodservice.KeyboardView
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.InputConnection
+import android.widget.GridView
 
 class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListener {
 
@@ -19,6 +19,8 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
     private var isShifted = false
     private var vibrator: Vibrator? = null
     private var lastSpaceTime: Long = 0
+    private var emojiGrid: GridView? = null
+    private var isEmojiMode = false
 
     override fun onCreate() {
         super.onCreate()
@@ -28,12 +30,22 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
     override fun onCreateInputView(): View {
         val view = layoutInflater.inflate(R.layout.keyboard_view, null)
         keyboardView = view.findViewById(R.id.keyboard_view)
+        emojiGrid = view.findViewById(R.id.emoji_grid)
 
         keyboardEn = Keyboard(this, R.xml.qwerty)
         keyboardRu = Keyboard(this, R.xml.qwerty_ru)
         
         keyboardView?.keyboard = keyboardEn
         keyboardView?.setOnKeyboardActionListener(this)
+
+        // Настраиваем панель эмодзи
+        val emojis = resources.getStringArray(R.array.emojis)
+        val adapter = EmojiAdapter(this, emojis)
+        emojiGrid?.adapter = adapter
+        emojiGrid?.setOnItemClickListener { _, _, position, _ ->
+            vibrate()
+            currentInputConnection?.commitText(emojis[position], 1)
+        }
 
         return view
     }
@@ -60,20 +72,23 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
         }
     }
 
+    private fun toggleEmojiPanel() {
+        isEmojiMode = !isEmojiMode
+        if (isEmojiMode) {
+            emojiGrid?.visibility = View.VISIBLE
+            keyboardView?.visibility = View.GONE
+        } else {
+            emojiGrid?.visibility = View.GONE
+            keyboardView?.visibility = View.VISIBLE
+        }
+    }
+
     override fun onKey(primaryCode: Int, keyCodes: IntArray?) {
         val inputConnection: InputConnection = currentInputConnection ?: return
         vibrate()
 
         when (primaryCode) {
-            Keyboard.KEYCODE_DELETE -> {
-                // Если кнопка backspace зажата - удаляем слово
-                val selected = inputConnection.getSelectedText(0)
-                if (selected.isNullOrEmpty()) {
-                    inputConnection.deleteSurroundingText(1, 0)
-                } else {
-                    inputConnection.commitText("", 1)
-                }
-            }
+            Keyboard.KEYCODE_DELETE -> inputConnection.deleteSurroundingText(1, 0)
             Keyboard.KEYCODE_SHIFT -> {
                 isShifted = !isShifted
                 updateKeyboard()
@@ -82,12 +97,12 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
                 isRussian = !isRussian
                 updateKeyboard()
             }
-            -200 -> { // Смайлик
-                inputConnection.commitText("😊", 1)
+            -200 -> { // Смайлик (переключение панели)
+                toggleEmojiPanel()
             }
             32 -> { // Пробел
                 val now = System.currentTimeMillis()
-                if (now - lastSpaceTime < 400) { // Двойной пробел = точка
+                if (now - lastSpaceTime < 400) {
                     inputConnection.deleteSurroundingText(1, 0)
                     inputConnection.commitText(". ", 1)
                     lastSpaceTime = 0
@@ -112,38 +127,19 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
         }
     }
 
-    // Обработка долгого нажатия
     override fun onLongPress(primaryCode: Int) {
         val inputConnection: InputConnection = currentInputConnection ?: return
         vibrate()
-        
         when (primaryCode) {
             Keyboard.KEYCODE_DELETE -> {
-                // Долгое нажатие на backspace = удалить всё
                 val text = inputConnection.getTextBeforeCursor(100, 0)
-                if (text != null) {
-                    inputConnection.deleteSurroundingText(text.length, 0)
-                }
+                if (text != null) inputConnection.deleteSurroundingText(text.length, 0)
             }
-            32 -> {
-                // Долгое нажатие на пробел = точка с пробелом
-                inputConnection.commitText(". ", 1)
-            }
-            1077 -> { // русская 'е'
-                inputConnection.commitText("ё", 1)
-            }
-            1045 -> { // русская 'Е'
-                inputConnection.commitText("Ё", 1)
-            }
-            1100 -> { // русская 'ь'
-                inputConnection.commitText("ъ", 1)
-            }
-            1068 -> { // русская 'Ь'
-                inputConnection.commitText("Ъ", 1)
-            }
-            46 -> { // точка
-                inputConnection.commitText(",", 1)
-            }
+            32 -> inputConnection.commitText(". ", 1)
+            1077 -> inputConnection.commitText("ё", 1)
+            1045 -> inputConnection.commitText("Ё", 1)
+            1100 -> inputConnection.commitText("ъ", 1)
+            1068 -> inputConnection.commitText("Ъ", 1)
         }
     }
 
