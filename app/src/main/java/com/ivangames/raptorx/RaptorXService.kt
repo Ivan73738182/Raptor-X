@@ -26,7 +26,7 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
     private var lastSpaceTime: Long = 0
     private var emojiGrid: GridView? = null
     private var isEmojiMode = false
-    private var isActionKey = false // Нужно ли менять Enter на действие
+    private var isActionKey = false
 
     override fun onCreate() {
         super.onCreate()
@@ -45,7 +45,6 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
         
         keyboardView?.setOnKeyboardActionListener(this)
 
-        // Настраиваем панель эмодзи
         val emojis = resources.getStringArray(R.array.emojis)
         val adapter = EmojiAdapter(this, emojis)
         emojiGrid?.adapter = adapter
@@ -54,32 +53,29 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
             currentInputConnection?.commitText(emojis[position], 1)
         }
 
-        updateKeyboard()
-        // Обработка настроек
+        // Настройка шестеренки
         view.findViewById<android.view.View>(R.id.btn_settings)?.setOnClickListener {
             val intent = android.content.Intent(this, MainActivity::class.java)
             intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
 
+        updateKeyboard()
         return view
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        // Проверяем, куда мы печатаем
         if (info != null) {
             val inputType = info.inputType and InputType.TYPE_MASK_CLASS
             val imeOptions = info.imeOptions and EditorInfo.IME_MASK_ACTION
             
-            // Если это поиск или отправка сообщения
             isActionKey = (imeOptions == EditorInfo.IME_ACTION_SEARCH || 
                            imeOptions == EditorInfo.IME_ACTION_SEND || 
                            imeOptions == EditorInfo.IME_ACTION_GO)
             
             updateKeyboard()
             
-            // Меняем надпись на кнопке Enter
             val enterKey = keyboardView?.keyboard?.keys?.find { it.codes[0] == -4 }
             if (enterKey != null) {
                 enterKey.label = when (imeOptions) {
@@ -158,10 +154,8 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
             }
             -4 -> { // Умный Enter
                 if (isActionKey) {
-                    // Отправляем действие приложению (поиск / отправка)
                     inputConnection.performEditorAction(EditorInfo.IME_ACTION_SEARCH)
                 } else {
-                    // Обычный перенос строки
                     inputConnection.commitText("\n", 1)
                 }
             }
