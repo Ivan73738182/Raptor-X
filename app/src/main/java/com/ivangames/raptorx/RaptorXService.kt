@@ -175,21 +175,6 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
         }
     }
 
-    override fun onLongPress(primaryCode: Int) {
-        val inputConnection: InputConnection = currentInputConnection ?: return
-        vibrate()
-        when (primaryCode) {
-            Keyboard.KEYCODE_DELETE -> {
-                val text = inputConnection.getTextBeforeCursor(100, 0)
-                if (text != null) inputConnection.deleteSurroundingText(text.length, 0)
-            }
-            32 -> inputConnection.commitText(". ", 1)
-            1077 -> inputConnection.commitText("ё", 1)
-            1045 -> inputConnection.commitText("Ё", 1)
-            1100 -> inputConnection.commitText("ъ", 1)
-            1068 -> inputConnection.commitText("Ъ", 1)
-        }
-    }
 
     override fun onPress(primaryCode: Int) {}
     override fun onRelease(primaryCode: Int) {}
