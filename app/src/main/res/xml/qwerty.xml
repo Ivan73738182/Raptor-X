@@ -5,7 +5,6 @@
     android:horizontalGap="0px"
     android:verticalGap="0px">
 
-    <!-- Ряд 1: цифры -->
     <Row>
         <Key android:codes="49" android:keyLabel="1" />
         <Key android:codes="50" android:keyLabel="2" />
@@ -19,7 +18,6 @@
         <Key android:codes="48" android:keyLabel="0" />
     </Row>
 
-    <!-- Ряд 2: QWERTY -->
     <Row>
         <Key android:codes="113" android:keyLabel="q" />
         <Key android:codes="119" android:keyLabel="w" />
@@ -33,7 +31,6 @@
         <Key android:codes="112" android:keyLabel="p" />
     </Row>
 
-    <!-- Ряд 3: ASDF -->
     <Row>
         <Key android:codes="97" android:keyLabel="a" />
         <Key android:codes="115" android:keyLabel="s" />
@@ -46,8 +43,9 @@
         <Key android:codes="108" android:keyLabel="l" />
     </Row>
 
-    <!-- Ряд 4: ZXCV -->
     <Row>
+        <!-- Добавили кнопку смены языка с кодом -100 -->
+        <Key android:codes="-100" android:keyLabel="🌐" android:keyWidth="15%p" />
         <Key android:codes="122" android:keyLabel="z" />
         <Key android:codes="120" android:keyLabel="x" />
         <Key android:codes="99" android:keyLabel="c" />
@@ -55,12 +53,12 @@
         <Key android:codes="98" android:keyLabel="b" />
         <Key android:codes="110" android:keyLabel="n" />
         <Key android:codes="109" android:keyLabel="m" />
-        <Key android:codes="-5" android:keyLabel="⌫" android:keyWidth="15%p" /> <!-- Backspace -->
+        <Key android:codes="-5" android:keyLabel="⌫" android:keyWidth="15%p" />
     </Row>
 
-    <!-- Ряд 5: Пробел и Enter -->
     <Row>
-        <Key android:codes="-1" android:keyLabel="⇧" android:keyWidth="15%p" /> <!-- Shift -->
+        <!-- Кнопка Shift имеет код -1 -->
+        <Key android:codes="-1" android:keyLabel="⇧" android:keyWidth="15%p" />
         <Key android:codes="32" android:keyLabel="Пробел" android:keyWidth="55%p" />
         <Key android:codes="10" android:keyLabel="Enter" android:keyWidth="20%p" />
     </Row>
