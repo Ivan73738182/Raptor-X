@@ -5,12 +5,13 @@
     android:background="#1E1E1E"
     android:orientation="vertical">
 
-    <TextView
+    <android.inputmethodservice.KeyboardView
+        android:id="@+id/keyboard_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="Raptor X клавиатура (в разработке)"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp" />
+        android:background="#1E1E1E"
+        android:keyBackground="@android:color/darker_gray"
+        android:keyTextColor="#FFFFFF"
+        android:keyTextSize="22sp" />
 
 </LinearLayout>
