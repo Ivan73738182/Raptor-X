@@ -3,6 +3,9 @@ package com.ivangames.raptorx
 import android.inputmethodservice.InputMethodService
 import android.inputmethodservice.Keyboard
 import android.inputmethodservice.KeyboardView
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.View
 import android.view.inputmethod.InputConnection
 
@@ -13,6 +16,12 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
     private var keyboardRu: Keyboard? = null
     private var isRussian = false
     private var isShifted = false
+    private var vibrator: Vibrator? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+    }
 
     override fun onCreateInputView(): View {
         val view = layoutInflater.inflate(R.layout.keyboard_view, null)
@@ -39,8 +48,19 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
         }
     }
 
+    private fun vibrate() {
+        if (vibrator?.hasVibrator() == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                vibrator?.vibrate(20)
+            }
+        }
+    }
+
     override fun onKey(primaryCode: Int, keyCodes: IntArray?) {
         val inputConnection: InputConnection = currentInputConnection ?: return
+        vibrate() // Вибрация при каждом нажатии
 
         when (primaryCode) {
             Keyboard.KEYCODE_DELETE -> inputConnection.deleteSurroundingText(1, 0)
@@ -48,18 +68,21 @@ class RaptorXService : InputMethodService(), KeyboardView.OnKeyboardActionListen
                 isShifted = !isShifted
                 updateKeyboard()
             }
-            -100 -> { // Кнопка смены языка
+            -100 -> { // Переключение языка
                 isRussian = !isRussian
                 updateKeyboard()
             }
+            -200 -> { // Смайлик
+                inputConnection.commitText("😊", 1)
+            }
             else -> {
                 var code = primaryCode
-                if (isShifted && code in 97..122) { // Если английская буква и включен Shift
-                    code = code - 32 // Делаем заглавной
-                    isShifted = false // Сбрасываем Shift после одной буквы
+                if (isShifted && code in 97..122) {
+                    code = code - 32
+                    isShifted = false
                     updateKeyboard()
-                } else if (isShifted && code in 1072..1103) { // Если русская буква и Shift
-                    code = code - 32 // Делаем заглавной
+                } else if (isShifted && code in 1072..1103) {
+                    code = code - 32
                     isShifted = false
                     updateKeyboard()
                 }

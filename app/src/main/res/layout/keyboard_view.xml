@@ -2,16 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#1E1E1E"
-    android:orientation="vertical">
+    android:background="#121212"
+    android:orientation="vertical"
+    android:padding="4dp">
 
     <android.inputmethodservice.KeyboardView
         android:id="@+id/keyboard_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#1E1E1E"
-        android:keyBackground="@android:color/darker_gray"
+        android:background="#121212"
+        android:keyBackground="@drawable/key_background"
         android:keyTextColor="#FFFFFF"
-        android:keyTextSize="22sp" />
+        android:keyTextSize="20sp"
+        android:padding="4dp" />
 
 </LinearLayout>
